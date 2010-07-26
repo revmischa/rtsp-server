@@ -43,6 +43,12 @@ has 'log_level' => (
     default => 2,
 );
 
+has 'max_clients' => (
+    is => 'rw',
+    isa => 'Int',
+    default => 100,
+);
+
 ## internal attributes
 
 has 'rtp_start_port' => (
@@ -76,6 +82,17 @@ has 'mounts' => (
     default => sub { {} },
     lazy => 1,
 );
+
+sub client_count {
+    my ($self) = @_;
+
+    return $self->client_server->connection_count;
+}
+
+sub client_stopped {
+    my ($self, $client) = @_;
+    $self->client_count($self->client_count + 1);
+}
 
 sub next_rtp_start_port {
     my ($self) = @_;
@@ -173,7 +190,7 @@ RTSP::Server - Lightweight RTSP/RTP server. Like icecast, for video.
   use RTSP::Server;
 
   my $srv = new RTSP::Server(
-      mount_points => [qw/ stream1.rtsp stream2.rtsp /],
+      log_level => 2,
       max_clients => 10,
   );
 

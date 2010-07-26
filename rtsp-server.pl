@@ -8,7 +8,6 @@ use AnyEvent;
 use RTSP::Server;
 
 my $srv = new RTSP::Server(
-    mount_points => [qw/ stream1.rtsp stream2.rtsp /],
     max_clients => 10,
     log_level => 4,
 );

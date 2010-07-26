@@ -49,9 +49,16 @@ has 'server' => (
     is => 'ro',
     isa => 'RTSP::Server',
     required => 1,
-    handles => [qw/ mounts mount get_mount unmount get_mount_path
-        trace debug info warn error /],
+    handles => [qw/ mounts trace debug info warn error max_clients /],
 );
+
+sub connection_count {
+    my ($self) = @_;
+
+    # TODO: don't double-count connections with the same IP or
+    # sessionid to prevent DoS
+    return scalar(keys %{ $self->{connections} });
+}
 
 sub listen {
     my ($self) = @_;

@@ -31,7 +31,7 @@ around 'public_options' => sub {
 before 'teardown' => sub {
     my ($self) = @_;
 
-    $self->close_socket;
+    $self->finish;
 };
 
 sub play {
@@ -52,13 +52,21 @@ sub play {
 sub stop {
     my ($self) = @_;
 
-    $self->close_socket;
+    $self->finish;
 
     $self->push_ok;
 }
 
 sub setup {
     my ($self) = @_;
+
+    if ($self->server->client_count > $self->server->max_clients) {
+        $self->info("Rejecting client: maximum clients (" .
+                    $self->server->max_clients . ") reached");
+
+        # 453 really is 'Not Enough Bandwidth'
+        return $self->push_response(453, "Maximum Clients Reached");
+    }
 
     my $mount_path = $self->get_mount_path
         or return $self->bad_request;
@@ -111,7 +119,7 @@ sub send_packet {
     return send $sock, $pkt, 0;
 }
 
-sub close_socket {
+sub finish {
     my ($self) = @_;
 
     my $mount = $self->get_mount;
@@ -130,7 +138,7 @@ sub close_socket {
 sub DEMOLISH {
     my ($self) = @_;
 
-    $self->close_socket;
+    $self->finish;
 }
 
 __PACKAGE__->meta->make_immutable;
