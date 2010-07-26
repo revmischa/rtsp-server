@@ -26,7 +26,7 @@ has 'client_listen_port' => (
 has 'source_listen_port' => (
     is => 'rw',
     isa => 'Int',
-    default => '555',
+    default => '5545',
     cmd_flag => 'serverport',
     cmd_aliases => 's',
     metaclass => 'MooseX::Getopt::Meta::Attribute',
@@ -187,22 +187,29 @@ sub build_logger {
     );
 }
 
-1;
+__PACKAGE__->meta->make_immutable;
 
 __END__
 
 =head1 NAME
 
-RTSP::Server - Lightweight RTSP/RTP server. Like icecast, for video.
+RTSP::Server - Lightweight RTSP/RTP server. Like icecast, for
+audio/video streams.
 
 =head1 SYNOPSIS
 
   use AnyEvent;
   use RTSP::Server;
 
+  # defaults:
   my $srv = new RTSP::Server(
-      log_level => 2,
-      max_clients => 10,
+      log_level             => 2,   # 0 = no output, 5 = most verbose
+      max_clients           => 100,
+      client_listen_port    => 554,
+      source_listen_port    => 5545,
+      rtp_start_port        => 20000,
+      client_listen_address => '0.0.0.0',
+      source_listen_address => '0.0.0.0',
   );
 
   # listen and accept incoming connections asynchronously
@@ -219,16 +226,24 @@ RTSP::Server - Lightweight RTSP/RTP server. Like icecast, for video.
 
 =head1 DESCRIPTION
 
-This server is designed to enable to rebroadcasting of RTSP/RTP
-streams to clients.
+This server is designed to enable to rebroadcasting of RTP media
+streams to clients, controlled by RTSP. Please see README for more
+information.
 
-=head2 EXPORT
+=head1 USAGE
 
-None by default.
+After starting the server, stream sources may send an ANNOUNCE for a
+desired mountpoint, followed by a RECORD request to begin streaming.
+Clients can then connect on the client port at the same mountpoint and
+send a PLAY request to receive the RTP data streamed from the source.
 
-=head1 TODO
+=head1 BUNDLED APPLICATIONS
 
-Authentication, automated tests.
+Includes rtsp-server.pl, which basically contains the synopsis.
+
+=head2 COMING SOON
+
+Priv dropping, authentication, client encoder, stats, tests
 
 =head1 SEE ALSO
 

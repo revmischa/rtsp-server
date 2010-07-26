@@ -7,9 +7,8 @@ use lib 'lib';
 use AnyEvent;
 use RTSP::Server;
 
+# you may pass your own options in here or via command-line
 my $srv = RTSP::Server->new_with_options(
-    max_clients => 10,
-    log_level => 4,
 );
 
 # listen and accept incoming connections

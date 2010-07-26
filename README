@@ -20,15 +20,23 @@ To install this module type the following:
 RUNNING
 
 Simply fire up the included rtsp-server.pl application and it will
-listen for clients on port 5454, and source streams on port 5455.
+listen for clients on port 554 (standard RTSP port), and source
+streams on port 5545.
 
 To begin sending video, you can use any client which supports the
 ANNOUNCE and RECORD RTSP methods, such as ffmpeg:
 
-ffmpeg -i /input.avi -f rtsp rtsp://12.34.56.78:555/abc
+ffmpeg -i /input.avi -f rtsp rtsp://12.34.56.78:5545/abc
 
 You should then be able to play that stream with any decent media
-player. Just point it at rtsp://12.34.56.78:554/abc
+player. Just point it at rtsp://12.34.56.78/abc
+
+If you don't want to run it as root, you may specify non-priviliged
+ports with --clientport/-c and --sourceport/-s
+
+COMING SOON:
+
+Priv dropping, authentication, client encoder, stats, tests
 
 DEPENDENCIES
 
