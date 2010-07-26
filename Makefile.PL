@@ -11,6 +11,8 @@ WriteMakefile(
         'AnyEvent::Socket' => 0,
         'AnyEvent::Util' => 0,
         'Socket' => 0,
+        'URI' => 0,
+        'MooseX::Getopt' => 0,
     },
     ($] >= 5.005 ?
       (ABSTRACT_FROM  => 'lib/RTSP/Server.pm',

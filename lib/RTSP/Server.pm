@@ -1,7 +1,8 @@
 package RTSP::Server;
 
-#use 5.010000;
 use Moose;
+    with 'MooseX::Getopt';
+
 use namespace::autoclean;
 
 use RTSP::Server::Logger;
@@ -16,13 +17,19 @@ our $RTP_START_PORT = 20_000;
 has 'client_listen_port' => (
     is => 'rw',
     isa => 'Int',
-    default => '5454',
+    default => '554',
+    cmd_flag => 'clientport',
+    cmd_aliases => 'c',
+    metaclass => 'MooseX::Getopt::Meta::Attribute',
 );
 
 has 'source_listen_port' => (
     is => 'rw',
     isa => 'Int',
-    default => '5455',
+    default => '555',
+    cmd_flag => 'serverport',
+    cmd_aliases => 's',
+    metaclass => 'MooseX::Getopt::Meta::Attribute',
 );
 
 has 'client_listen_address' => (
@@ -60,11 +67,13 @@ has 'rtp_start_port' => (
 has 'source_server' => (
     is => 'rw',
     clearer => 'close_source_server',
+    traits => [ 'NoGetopt' ],
 );
 
 has 'client_server' => (
     is => 'rw',
     clearer => 'close_client_server',
+    traits => [ 'NoGetopt' ],
 );
 
 has 'logger' => (
@@ -73,6 +82,7 @@ has 'logger' => (
     handles => [qw/ trace debug info warn error /],
     lazy => 1,
     builder => 'build_logger',
+    traits => [ 'NoGetopt' ],
 );
 
 # map of uri => Mount
@@ -81,6 +91,7 @@ has 'mounts' => (
     isa => 'HashRef',
     default => sub { {} },
     lazy => 1,
+    traits => [ 'NoGetopt' ],
 );
 
 sub client_count {

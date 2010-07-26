@@ -7,7 +7,7 @@ use lib 'lib';
 use AnyEvent;
 use RTSP::Server;
 
-my $srv = new RTSP::Server(
+my $srv = RTSP::Server->new_with_options(
     max_clients => 10,
     log_level => 4,
 );
