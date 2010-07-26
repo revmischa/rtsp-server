@@ -14,6 +14,12 @@ has 'sdp' => (
     required => 1,
 );
 
+has 'range' => (
+    is => 'rw',
+    isa => 'Str',
+    clearer => 'clear_range',
+);
+
 has 'mounted' => (
     is => 'rw',
     isa => 'Bool',

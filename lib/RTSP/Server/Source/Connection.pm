@@ -99,6 +99,10 @@ sub record {
 
     $self->debug("Got record for mountpoint " . $mount->path);
 
+    # save range if present
+    my $range = $self->get_req_header('Range');
+    $range ? $mount->range($range) : $mount->clear_range;
+
     if ($self->start_rtp_server) {
         $self->push_ok;
         $mount->mounted(1);

@@ -48,6 +48,9 @@ has 'log_level' => (
     is => 'rw',
     isa => 'Int',
     default => 2,
+    cmd_flag => 'loglevel',
+    cmd_aliases => 'l',
+    metaclass => 'MooseX::Getopt::Meta::Attribute',
 );
 
 has 'max_clients' => (

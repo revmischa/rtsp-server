@@ -110,6 +110,8 @@ sub describe {
     my $mount = $self->get_mount
         or return $self->not_found;
 
+    $self->add_resp_header('Content-Type', 'application/sdp');
+
     $self->push_ok($mount->sdp);
 }
 

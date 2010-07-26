@@ -44,6 +44,12 @@ sub play {
         return;
     }
 
+    # send range if available
+    my $range = $mount->range;
+    if ($range) {
+        $self->add_resp_header('Range', $range);
+    }
+
     # TODO: check auth
 
     $self->push_ok;
