@@ -8,6 +8,7 @@ use Moose;
 
 use namespace::autoclean;
 use RTSP::Server::RTPListener;
+use RTSP::Server::Mount::Stream;
 
 has 'rtp_listeners' => (
     is => 'rw',
@@ -45,26 +46,30 @@ sub start_rtp_server {
         or return;
 
     $self->debug("Starting RTP listeners");
-    my @ports = $self->get_rtp_listen_ports;
-
     my $ok = 0;
-    foreach my $port (@ports) {
-        $self->debug(" -> port $port");
 
-        my $listener = RTSP::Server::RTPListener->new(
-            mount => $mount,
-            host => $self->server->source_listen_address,
-            port => $port,
-        );
+    foreach my $stream ($mount->streams) {
+        $self->debug(" |-- stream " . $stream->index);
 
-        push @{ $self->rtp_listeners }, $listener;
+        foreach my $port ($stream->get_rtp_listen_ports) {
+            $self->debug(" |---- port $port");
 
-        unless ($listener->listen) {
-            $self->error("Failed to create RTP listener on port $port");
-            return;
+            my $listener = RTSP::Server::RTPListener->new(
+                mount => $mount,
+                stream => $stream,
+                host => $self->server->source_listen_address,
+                port => $port,
+            );
+
+            push @{ $self->rtp_listeners }, $listener;
+
+            unless ($listener->listen) {
+                $self->error("Failed to create RTP listener on port $port");
+                return;
+            }
+
+            $ok = 1;
         }
-
-        $ok = 1;
     }
 
     return $ok;
@@ -147,7 +152,8 @@ sub setup {
 
     # does a mount exist? RTSP spec (10.4) says a client can issue a
     # SETUP for an existing stream to change the params.
-    my $mount = $self->get_mount($mount_path);
+    my ($mount, $stream_id) = $self->get_mount;
+    $self->debug("Got SETUP request for stream $stream_id");
     if ($mount && $mount->mounted) {
         # well, we don't support that yet.
         $self->debug("SETUP request for $mount_path, but the mountpoint is in use");
@@ -158,8 +164,24 @@ sub setup {
     my $transport = $self->get_req_header('Transport')
         or return $self->bad_request;
 
+    $stream_id ||= 0;
+
+    # create stream
+    my $stream = $mount->get_stream($stream_id);
+    unless ($stream) {
+        $self->debug("Creating new stream $stream_id");
+
+        $stream = RTSP::Server::Mount::Stream->new(
+            rtp_start_port => $self->next_rtp_start_port,
+            index => $stream_id,
+        );
+    }
+
+    # add stream to mount
+    $mount->add_stream($stream);
+
     # add our RTP ports to transport header response
-    my $port_range = $self->rtp_port_range;
+    my $port_range = $stream->rtp_port_range;
     $self->add_resp_header("Transport", "$transport;server_port=$port_range");
 
     $self->push_ok;

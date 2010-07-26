@@ -20,31 +20,38 @@ has 'mounted' => (
     default => 0,
 );
 
-# map of session_id -> client connection
-has 'clients' => (
+# map of stream_id -> stream
+has '_streams' => (
     is => 'rw',
     isa => 'HashRef',
     default => sub { {} },
 );
 
-sub add_client {
-    my ($self, $client) = @_;
+sub add_stream {
+    my ($self, $stream) = @_;
+    $self->_streams->{$stream->index} = $stream;
+}
 
-    $self->clients->{$client->session_id} = $client;
+sub remove_stream {
+    my ($self, $stream) = @_;
+    delete $self->_streams->{$stream->index};
+}
+
+sub streams {
+    my ($self) = @_;
+    return values %{ $self->_streams };
+}
+
+sub get_stream {
+    my ($self, $stream_id) = @_;
+    return $self->_streams->{$stream_id};
 }
 
 sub remove_client {
     my ($self, $client) = @_;
 
-    delete $self->clients->{$client->session_id};
-}
-
-# broadcast a video packet to all clients
-sub broadcast {
-    my ($self, $pkt) = @_;
-
-    foreach my $client (values %{ $self->clients }) {
-        $client->send_packet($pkt);
+    foreach my $stream ($self->streams) {
+        $stream->remove_client($client);
     }
 }
 

@@ -147,8 +147,6 @@ sub listen {
                             } else {
                                 # we got a header
                                 my ($header, $value) = $line =~ m/\s*([-\w]+)\s*:\s+(.*)$/;
-                                $self->trace("Got header $header, value $value");
-
                                 $conn->add_req_header($header, $value);
                             }
                         } else {

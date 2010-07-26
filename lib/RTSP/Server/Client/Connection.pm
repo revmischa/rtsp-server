@@ -9,19 +9,17 @@ use Moose;
 use namespace::autoclean;
 use Socket;
 
-has 'client_socket' => (
+has 'client_sockets' => (
     is => 'rw',
-    clearer => 'clear_client_socket',
+    isa => 'HashRef',
+    default => sub { {} },
 );
 
-# packed sock addr of client
-has 'client_socket_dest' => (
+# map of stream_id -> stream
+has 'streams' => (
     is => 'rw',
-);
-
-has 'client_rtp_port' => (
-    is => 'rw',
-    isa => 'Int',
+    isa => 'HashRef',
+    default => sub { {} },
 );
 
 around 'public_options' => sub {
@@ -39,10 +37,6 @@ before 'teardown' => sub {
 sub play {
     my ($self) = @_;
 
-    # should have this from SETUP
-    my $port = $self->client_rtp_port
-        or return $self->bad_request;
-
     # find requested mount
     my $mount = $self->get_mount;
     unless ($mount) {
@@ -51,15 +45,6 @@ sub play {
     }
 
     # TODO: check auth
-
-    # create UDP socket
-    my($name, $alias, $udp_proto) = AnyEvent::Socket::getprotobyname('udp');
-    socket my($sock), PF_INET, SOCK_DGRAM, $udp_proto;
-    AnyEvent::Util::fh_nonblocking $sock, 1;
-    my $dest = sockaddr_in($port, Socket::inet_aton($self->client_address));
-    
-    $self->client_socket_dest($dest);
-    $self->client_socket($sock);
 
     $self->push_ok;
 }
@@ -78,12 +63,11 @@ sub setup {
     my $mount_path = $self->get_mount_path
         or return $self->bad_request;
 
-    # strip off stream_id for now
-    my ($stream_id) = $mount_path =~ s!/streamid=(\d+)!!sgm;
-    $self->debug("setup stream id $stream_id");
-
-    my $mount = $self->get_mount($mount_path)
+    my ($mount, $stream_id) = $self->get_mount
         or return $self->not_found;
+
+    $stream_id ||= 0;
+    $self->debug("SETUP stream id $stream_id");
 
     # should have transport header
     my $transport = $self->get_req_header('Transport')
@@ -98,31 +82,49 @@ sub setup {
         return $self->bad_request;
     }
 
-    # save starting RTP port
-    $self->client_rtp_port($client_rtp_start_port);
+    # register client with stream
+    my $stream = $mount->get_stream($stream_id)
+        or return $self->not_found;
 
-    $mount->add_client($self);
+    # create UDP socket for this stream
+    my($name, $alias, $udp_proto) = AnyEvent::Socket::getprotobyname('udp');
+    socket my($sock), PF_INET, SOCK_DGRAM, $udp_proto;
+    AnyEvent::Util::fh_nonblocking $sock, 1;
+    my $dest = sockaddr_in($client_rtp_start_port, Socket::inet_aton($self->client_address));
+    unless (connect $sock, $dest) {
+        $self->error("Failed to create client socket on port $client_rtp_start_port: $!");
+        return $self->internal_server_error;
+    }
+
+    $self->client_sockets->{$stream_id} = $sock;
+    $stream->add_client($self);
 
     $self->push_ok;
 }
 
 sub send_packet {
-    my ($self, $pkt) = @_;
+    my ($self, $stream_id, $pkt) = @_;
 
-    return unless $self->client_socket;
+    my $sock = $self->client_sockets->{$stream_id}
+    or return;
 
-    send $self->client_socket, $pkt, 0, $self->client_socket_dest;
+    return send $sock, $pkt, 0;
 }
 
 sub close_socket {
     my ($self) = @_;
 
     my $mount = $self->get_mount;
-    $mount->add_client($self) if $mount;
+    $mount->remove_client($self) if $mount;
 
-    my $sock = $self->client_socket or return;
-    shutdown $sock, 1;  # done writing
-    $self->clear_client_socket;
+    $self->streams({});
+
+    my @sockets = values %{ $self->client_sockets };
+    foreach my $sock (@sockets) {
+        shutdown $sock, 1;  # done writing
+    }
+
+    $self->client_sockets({});
 }
 
 sub DEMOLISH {

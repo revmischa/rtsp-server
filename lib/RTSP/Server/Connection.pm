@@ -76,8 +76,7 @@ has 'resp_headers' => (
 has 'session' => (
     is => 'rw',
     isa => 'RTSP::Server::Session',
-    handles => [qw/ session_id rtp_start_port rtp_end_port
-        rtp_port_range get_rtp_listen_ports /],
+    handles => [qw/ session_id /],
     lazy => 1,
     builder => 'build_session',
     clearer => 'clear_session',
@@ -154,7 +153,6 @@ sub build_session {
     my ($self) = @_;
 
     my $sess = RTSP::Server::Session->new(
-        rtp_start_port => $self->next_rtp_start_port,
     );
 
     return $sess;
@@ -253,7 +251,6 @@ sub push_response {
     # push headers
     foreach my $hdr (keys %{ $self->resp_headers }) {
         foreach my $val (@{ $self->resp_headers->{$hdr} }) {
-            $self->trace("header: $hdr, val: $val");
             $self->push_resp_line("$hdr: $val");
         }
     }
@@ -322,7 +319,12 @@ sub get_mount {
     my ($self, $path) = @_;
 
     $path ||= $self->get_mount_path or return;
-    return $self->mounts->{$path};
+
+    my ($stream_id) = $path =~ m!/streamid=(\d+)!sm;
+    $path =~ s!/streamid=(\d+)!!sm;
+
+    my $mnt = $self->mounts->{$path};
+    return wantarray ? ($mnt, $stream_id) : $mnt;
 }
 
 # returns new mount point

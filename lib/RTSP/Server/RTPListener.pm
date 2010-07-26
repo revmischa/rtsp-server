@@ -12,6 +12,12 @@ has 'mount' => (
     required => 1,
 );
 
+has 'stream' => (
+    is => 'ro',
+    isa => 'RTSP::Server::Mount::Stream',
+    required => 1,
+);
+
 has 'host' => (
     is => 'ro',
     isa => 'Str',
@@ -73,7 +79,7 @@ sub listen {
 
             next unless $buf;
 
-            $self->mount->broadcast($buf);
+            $self->stream->broadcast($buf);
         }
     );
 
