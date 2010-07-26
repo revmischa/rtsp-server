@@ -1,8 +1,12 @@
 RTSP-Server version
 ========================
 
-This module is designed to accept a number of video input feeds, allow
-clients to connect and transmit RTSP commands to receive RTP data.
+This module is designed to accept a number of sources to connect and
+transmit audio and video streams.
+Clients can connect and send RTSP commands to receive RTP data.
+
+This was designed to make rebroadcasting audio and video data over a
+network simple.
 
 INSTALLATION
 
@@ -13,11 +17,24 @@ To install this module type the following:
    make test
    make install
 
+RUNNING
+
+Simply fire up the included rtsp-server.pl application and it will
+listen for clients on port 5454, and source streams on port 5455.
+
+To begin sending video, you can use any client which supports the
+ANNOUNCE and RECORD RTSP methods, such as ffmpeg:
+
+ffmpeg -i /input.avi -f rtsp rtsp://12.34.56.78:5455/abc
+
+You should then be able to play that stream with any decent media
+player. Just point it at rtsp://12.34.56.78:5454/abc
+
 DEPENDENCIES
 
 This module requires these other modules and libraries:
 
-  AnyEvent::Socket
+  L<Moose>, L<AnyEvent::Socket>, L<AnyEvent::Handle>
 
 COPYRIGHT AND LICENCE
 
