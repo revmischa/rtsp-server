@@ -113,6 +113,11 @@ sub setup {
     $self->client_sockets->{$stream_id} = $sock;
     $stream->add_client($self);
 
+    # add our RTP ports to transport header response
+    my ($local_port, $local_addr) = sockaddr_in(getsockname($sock));
+    my $port_range = $local_port . '-' . ($local_port + 1);
+    $self->add_resp_header("Transport", "$transport;server_port=$port_range");
+
     $self->push_ok;
 }
 
