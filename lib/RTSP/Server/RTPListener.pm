@@ -33,7 +33,7 @@ has 'port' => (
 has 'read_size' => (
     is => 'rw',
     isa => 'Int',
-    default => 1420,
+    default => 1500,
 );
 
 has 'watcher' => (
