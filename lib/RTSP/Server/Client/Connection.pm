@@ -116,6 +116,18 @@ sub setup {
     $self->client_sockets->{$stream_id} = $sock;
     $stream->add_client($self);
 
+    # create UDP socket for the RTCP packets
+    socket my($sock_rtcp), PF_INET, SOCK_DGRAM, $udp_proto;
+    AnyEvent::Util::fh_nonblocking $sock_rtcp, 1;
+    $dest = sockaddr_in($client_rtp_end_port, Socket::inet_aton($self->client_address));
+    bind $sock_rtcp, sockaddr_in($local_port + 1, Socket::inet_aton($self->local_address));
+    unless (connect $sock_rtcp, $dest) {
+        $self->error("Failed to create client socket on port $client_rtp_end_port: $!");
+        return $self->internal_server_error;
+    }
+
+    $self->client_sockets->{$stream_id . "rtcp"} = $sock_rtcp;
+
     # add our RTP ports to transport header response
     my $port_range = $local_port . '-' . ($local_port + 1);
     $self->add_resp_header("Transport", "$transport;server_port=$port_range");
@@ -128,6 +140,8 @@ sub send_packet {
 
     my $sock = $self->client_sockets->{$stream_id}
     or return;
+    my $type_byte = ord(substr($pkt, 1, 1));
+    $sock = $self->client_sockets->{$stream_id . "rtcp"} if ($type_byte >= 200 && $type_byte <= 204);
 
     return send $sock, $pkt, 0;
 }
