@@ -27,6 +27,12 @@ has 'client_port' => (
     required => 1,
 );
 
+has 'local_address' => (
+    is => 'ro',
+    isa => 'Str',
+    required => 1,
+);
+
 has 'handle' => (
     is => 'rw',
     accessor => 'h',

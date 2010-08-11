@@ -8,6 +8,7 @@ use AnyEvent::Socket;
 
 use RTSP::Server::Source::Connection;
 use RTSP::Server::Client::Connection;
+use Socket;
 
 has 'listen_address' => (
     is => 'rw',
@@ -72,11 +73,15 @@ sub listen {
         
         $self->info("$conn_class connection from $rhost:$rport");
 
+        my ($local_port, $local_addr) = sockaddr_in(getsockname($fh));
+        $local_addr = inet_ntoa($local_addr);
+
         # create object to track client
         my $conn = "RTSP::Server::${conn_class}::Connection"->new(
             id => $self->next_connection_id,
             client_address => $rhost,
             client_port => $rport,
+            local_address => $local_addr,
             server => $self->server,
         );
 
