@@ -100,10 +100,13 @@ sub setup {
     my $stream = $mount->get_stream($stream_id)
         or return $self->not_found;
 
+    my $local_port = $self->next_rtp_start_port;
+
     # create UDP socket for this stream
     my($name, $alias, $udp_proto) = AnyEvent::Socket::getprotobyname('udp');
     socket my($sock), PF_INET, SOCK_DGRAM, $udp_proto;
     AnyEvent::Util::fh_nonblocking $sock, 1;
+    bind $sock, sockaddr_in($local_port, Socket::inet_aton($self->local_address));
     my $dest = sockaddr_in($client_rtp_start_port, Socket::inet_aton($self->client_address));
     unless (connect $sock, $dest) {
         $self->error("Failed to create client socket on port $client_rtp_start_port: $!");
@@ -114,7 +117,6 @@ sub setup {
     $stream->add_client($self);
 
     # add our RTP ports to transport header response
-    my ($local_port, $local_addr) = sockaddr_in(getsockname($sock));
     my $port_range = $local_port . '-' . ($local_port + 1);
     $self->add_resp_header("Transport", "$transport;server_port=$port_range");
 
