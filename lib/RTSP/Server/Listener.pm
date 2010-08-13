@@ -9,6 +9,7 @@ use AnyEvent::Socket;
 use RTSP::Server::Source::Connection;
 use RTSP::Server::Client::Connection;
 use Socket;
+use Socket6;
 
 has 'listen_address' => (
     is => 'rw',
@@ -73,8 +74,15 @@ sub listen {
         
         $self->info("$conn_class connection from $rhost:$rport");
 
-        my ($local_port, $local_addr) = sockaddr_in(getsockname($fh));
-        $local_addr = inet_ntoa($local_addr);
+        my $addr_family = sockaddr_family(getsockname($fh));
+        my ($local_port, $local_addr);
+        if ($addr_family == AF_INET) {
+            ($local_port, $local_addr) = sockaddr_in(getsockname($fh));
+            $local_addr = inet_ntoa($local_addr);
+        } elsif ($addr_family == AF_INET6) {
+            ($local_port, $local_addr) = sockaddr_in6(getsockname($fh));
+            $local_addr = inet_ntop(AF_INET6, $local_addr);
+        }
 
         # create object to track client
         my $conn = "RTSP::Server::${conn_class}::Connection"->new(
@@ -82,6 +90,7 @@ sub listen {
             client_address => $rhost,
             client_port => $rport,
             local_address => $local_addr,
+            addr_family => $addr_family,
             server => $self->server,
         );
 

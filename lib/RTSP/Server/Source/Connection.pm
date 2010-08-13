@@ -58,6 +58,7 @@ sub start_rtp_server {
                 mount => $mount,
                 stream => $stream,
                 host => $self->local_address,
+                addr_family => $self->addr_family,
                 port => $port,
             );
 
