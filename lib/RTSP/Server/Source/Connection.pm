@@ -57,7 +57,7 @@ sub start_rtp_server {
             my $listener = RTSP::Server::RTPListener->new(
                 mount => $mount,
                 stream => $stream,
-                host => $self->server->source_listen_address,
+                host => $self->local_address,
                 port => $port,
             );
 
