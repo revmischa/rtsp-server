@@ -97,10 +97,6 @@ sub DEMOLISH {
     if ($self->socket) {
         shutdown $self->socket, 2;
     }
-
-    if ($self->child) {
-        $self->child->kill(2); # SIGINT
-    }
 }
 
 __PACKAGE__->meta->make_immutable;
