@@ -14,8 +14,6 @@ WriteMakefile(
         'URI' => 0,
         'MooseX::Getopt' => 0,
     },
-0,
-    },
 
     META_ADD => { resources => { repository => 'git://github.com/revmischa/rtsp-server.git' } },
 

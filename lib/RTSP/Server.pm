@@ -9,7 +9,7 @@ use RTSP::Server::Logger;
 use RTSP::Server::Source;
 use RTSP::Server::Client;
 
-our $VERSION = '0.03';
+our $VERSION = '0.04';
 our $RTP_START_PORT = 20_000;
 
 ## configuration attributes
