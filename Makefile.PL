@@ -14,7 +14,11 @@ WriteMakefile(
         'URI' => 0,
         'MooseX::Getopt' => 0,
     },
-    META_ADD => { 'repository' => 'git://github.com/revmischa/rtsp-server.git' },
+0,
+    },
+
+    META_ADD => { resources => { repository => 'git://github.com/revmischa/rtsp-server.git' } },
+
     ($] >= 5.005 ?
       (ABSTRACT_FROM  => 'lib/RTSP/Server.pm',
        AUTHOR         => 'Mischa Spiegelmock <revmischa@cpan.org>') : ()),
