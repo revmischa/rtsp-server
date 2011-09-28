@@ -92,6 +92,7 @@ has 'server' => (
     is => 'ro',
     isa => 'RTSP::Server',
     required => 1,
+    predicate => 'server_exists',
     handles => [qw/ next_rtp_start_port mounts trace debug info warn error /],
 );
 
@@ -394,7 +395,7 @@ sub reset {
 sub DEMOLISH {
     my ($self) = @_;
 
-    $self->server->housekeeping;
+    $self->server->housekeeping if $self->server_exists;
 }
 
 1;

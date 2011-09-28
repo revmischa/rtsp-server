@@ -12,7 +12,7 @@ use RTSP::Server::Mount::Stream;
 
 has 'rtp_listeners' => (
     is => 'rw',
-    isa => 'ArrayRef',
+    isa => 'ArrayRef[RTSP::Server::RTPListener]',
     default => sub { [] },
     lazy => 1,
 );
@@ -84,6 +84,7 @@ sub end_rtp_server {
     $self->debug("Shutting down RTP listeners");
     foreach my $listener (@$listeners) {
         $self->debug(" -> port " . $listener->port);
+        $listener->close;
     }
 
     $self->rtp_listeners([]);

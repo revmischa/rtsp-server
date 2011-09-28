@@ -38,6 +38,7 @@ has 'read_size' => (
 
 has 'watcher' => (
     is => 'rw',
+    clearer => 'clear_watcher',
 );
 
 has 'socket' => (
@@ -62,7 +63,7 @@ sub listen {
     my $buf;
     my $read_size = $self->read_size;
 
-    my $w; $w = AnyEvent->io(
+    my $w = AnyEvent->io(
         fh => $sock,
         poll => 'r', cb => sub {
             my $sender_addr = recv $sock, $buf, $read_size, 0;
@@ -70,10 +71,9 @@ sub listen {
             # TODO: compare $sender_addr to expected addr
 
             if (! defined $sender_addr) {
-                # error
-                $self->error("Error receiving RTP data");
-                undef $w;
-
+                # error receiving UDP packet
+                warn("Error receiving RTP data.");
+                $self->clear_watcher;
                 return;
             }
 
@@ -91,12 +91,20 @@ sub listen {
     return 1;
 }
 
-sub DEMOLISH {
+sub close {
     my ($self) = @_;
+
+    $self->clear_watcher;
 
     if ($self->socket) {
         shutdown $self->socket, 2;
     }
+}
+
+sub DEMOLISH {
+    my ($self) = @_;
+
+    $self->close;
 }
 
 __PACKAGE__->meta->make_immutable;
