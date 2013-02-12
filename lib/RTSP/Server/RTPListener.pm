@@ -5,6 +5,7 @@ use namespace::autoclean;
 
 use AnyEvent::Util;
 use Socket;
+use Socket6;
 
 has 'mount' => (
     is => 'ro',
@@ -19,6 +20,12 @@ has 'stream' => (
 );
 
 has 'host' => (
+    is => 'ro',
+    isa => 'Str',
+    required => 1,
+);
+
+has 'addr_family' => (
     is => 'ro',
     isa => 'Str',
     required => 1,
@@ -50,10 +57,16 @@ sub listen {
 
     # create UDP listener socket
     my($name, $alias, $udp_proto) = AnyEvent::Socket::getprotobyname('udp');
-    socket my($sock), PF_INET, SOCK_DGRAM, $udp_proto;
+    socket my($sock), $self->addr_family, SOCK_DGRAM, $udp_proto;
     AnyEvent::Util::fh_nonblocking $sock, 1;
 
-    unless (bind $sock, sockaddr_in($self->port, Socket::inet_aton($self->host))) {
+    my $addr;
+    if ($self->addr_family == AF_INET) {
+        $addr = sockaddr_in($self->port, Socket::inet_aton($self->host));
+    } elsif ($self->addr_family == AF_INET6) {
+        $addr = sockaddr_in6($self->port, Socket6::inet_pton(AF_INET6, $self->host));
+    }
+    unless (bind $sock, $addr) {
         warn("Error binding UDP listener to port " . $self->port . ": $!");
         return;
     }

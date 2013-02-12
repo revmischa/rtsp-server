@@ -33,6 +33,12 @@ has 'local_address' => (
     required => 1,
 );
 
+has 'addr_family' => (
+    is => 'ro',
+    isa => 'Str',
+    required => 1,
+);
+
 has 'handle' => (
     is => 'rw',
     accessor => 'h',
