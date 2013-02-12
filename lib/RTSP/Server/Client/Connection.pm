@@ -8,6 +8,7 @@ use Moose;
 
 use namespace::autoclean;
 use Socket;
+use Socket6;
 
 has 'client_sockets' => (
     is => 'rw',
@@ -104,10 +105,17 @@ sub setup {
 
     # create UDP socket for this stream
     my($name, $alias, $udp_proto) = AnyEvent::Socket::getprotobyname('udp');
-    socket my($sock), PF_INET, SOCK_DGRAM, $udp_proto;
+    socket my($sock), $self->addr_family, SOCK_DGRAM, $udp_proto;
     AnyEvent::Util::fh_nonblocking $sock, 1;
-    bind $sock, sockaddr_in($local_port, Socket::inet_aton($self->local_address));
-    my $dest = sockaddr_in($client_rtp_start_port, Socket::inet_aton($self->client_address));
+    my ($local, $dest);
+    if ($self->addr_family == AF_INET) {
+        $local = sockaddr_in($local_port, Socket::inet_aton($self->local_address));
+        $dest = sockaddr_in($client_rtp_start_port, Socket::inet_aton($self->client_address));
+    } elsif ($self->addr_family == AF_INET6) {
+        $local = sockaddr_in6($local_port, Socket6::inet_pton(AF_INET6, $self->local_address));
+        $dest = sockaddr_in6($client_rtp_start_port, Socket6::inet_pton(AF_INET6, $self->client_address));
+    }
+    bind $sock, $local;
     unless (connect $sock, $dest) {
         $self->error("Failed to create client socket on port $client_rtp_start_port: $!");
         return $self->internal_server_error;
@@ -117,10 +125,16 @@ sub setup {
     $stream->add_client($self);
 
     # create UDP socket for the RTCP packets
-    socket my($sock_rtcp), PF_INET, SOCK_DGRAM, $udp_proto;
+    socket my($sock_rtcp), $self->addr_family, SOCK_DGRAM, $udp_proto;
     AnyEvent::Util::fh_nonblocking $sock_rtcp, 1;
-    $dest = sockaddr_in($client_rtp_end_port, Socket::inet_aton($self->client_address));
-    bind $sock_rtcp, sockaddr_in($local_port + 1, Socket::inet_aton($self->local_address));
+    if ($self->addr_family == AF_INET) {
+        $local = sockaddr_in($local_port + 1, Socket::inet_aton($self->local_address));
+        $dest = sockaddr_in($client_rtp_end_port, Socket::inet_aton($self->client_address));
+    } elsif ($self->addr_family == AF_INET6) {
+        $local = sockaddr_in6($local_port + 1, Socket6::inet_pton(AF_INET6, $self->local_address));
+        $dest = sockaddr_in6($client_rtp_end_port, Socket6::inet_pton(AF_INET6, $self->client_address));
+    }
+    bind $sock_rtcp, $local;
     unless (connect $sock_rtcp, $dest) {
         $self->error("Failed to create client socket on port $client_rtp_end_port: $!");
         return $self->internal_server_error;
