@@ -1,3 +1,4 @@
+.shipit
 lib/RTSP/Server.pm
 lib/RTSP/Server/Client.pm
 lib/RTSP/Server/Client/Connection.pm

@@ -33,6 +33,12 @@ has 'local_address' => (
     required => 1,
 );
 
+has 'addr_family' => (
+    is => 'ro',
+    isa => 'Str',
+    required => 1,
+);
+
 has 'handle' => (
     is => 'rw',
     accessor => 'h',
@@ -92,6 +98,7 @@ has 'server' => (
     is => 'ro',
     isa => 'RTSP::Server',
     required => 1,
+    predicate => 'server_exists',
     handles => [qw/ next_rtp_start_port mounts trace debug info warn error /],
 );
 
@@ -394,7 +401,7 @@ sub reset {
 sub DEMOLISH {
     my ($self) = @_;
 
-    $self->server->housekeeping;
+    $self->server->housekeeping if $self->server_exists;
 }
 
 1;
