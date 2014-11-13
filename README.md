@@ -25,13 +25,13 @@ streams on port 5545.
 To begin sending video, you can use any client which supports the
 ANNOUNCE and RECORD RTSP methods, such as [FFmpeg](https://www.ffmpeg.org/ffmpeg-protocols.html#rtsp):
 
-ffmpeg -re -i /input.avi -f rtsp -muxdelay 0.1 rtsp://12.34.56.78:5545/abc
+`ffmpeg -re -i /input.avi -f rtsp -muxdelay 0.1 rtsp://12.34.56.78:5545/abc`
 
 You should then be able to play that stream with any decent media
 player. Just point it at rtsp://12.34.56.78/abc
 
 If you don't want to run it as root, you may specify non-priviliged
-ports with --clientport/-c and --sourceport/-s
+ports with `--clientport/-c` and `--sourceport/-s`
 
 ## TODO:
 
