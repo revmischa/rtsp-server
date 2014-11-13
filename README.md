@@ -41,7 +41,7 @@ Priv dropping, authentication, client encoder, stats, tests
 
 This module requires these other modules and libraries:
 
-  L<Moose>, L<AnyEvent::Socket>, L<AnyEvent::Handle>
+  Moose, AnyEvent::Socket, AnyEvent::Handle
 
 ## COPYRIGHT AND LICENCE
 
