@@ -24,7 +24,7 @@ listen for clients on port 554 (standard RTSP port), and source
 streams on port 5545.
 
 To begin sending video, you can use any client which supports the
-ANNOUNCE and RECORD RTSP methods, such as ffmpeg:
+ANNOUNCE and RECORD RTSP methods, such as [https://www.ffmpeg.org/ffmpeg-protocols.html#rtsp](FFmpeg):
 
 ffmpeg -re -i /input.avi -f rtsp -muxdelay 0.1 rtsp://12.34.56.78:5545/abc
 
