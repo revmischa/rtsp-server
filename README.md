@@ -15,6 +15,29 @@ To install this module type the following:
    make test
    make install
 ```
+To install debian jessie dependences:
+```
+Install enyevent
+   sudo apt-get install libanyevent-perl
+   sudo cpan AnyEvent::MPRPC::Client
+   
+Install moose
+   sudo apt-get instal libmoose-perl
+   sudo apt-get install libmoosex-getopt-perl
+   
+Install socket6
+   sudo apt-get install libsocket6-perl
+
+Clone from git
+   git clone https://github.com/revmischa/rtsp-server
+
+Then make, test and install
+   perl Makefile.PL
+   make
+   make test
+   make install
+
+```
 
 ## RUNNING
 
