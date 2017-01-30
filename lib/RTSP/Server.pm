@@ -97,6 +97,16 @@ has 'mounts' => (
     traits => [ 'NoGetopt' ],
 );
 
+has 'mounts_callback' => (
+    is => 'rw',
+    default => sub {
+        sub{
+            print "default mounts callback\n";
+        }
+    },
+    traits => [ 'NoGetopt' ],
+);
+
 sub client_count {
     my ($self) = @_;
 
