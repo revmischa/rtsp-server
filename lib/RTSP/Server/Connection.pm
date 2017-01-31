@@ -382,7 +382,7 @@ sub unmount {
 
     $path ||= $self->get_mount_path or return;
     delete $self->mounts->{$path};
-    $self->server->mounts_callback->();
+    $self->server->remove_source_update_callback->();
 
     $self->info("Unmounting $path");
 }

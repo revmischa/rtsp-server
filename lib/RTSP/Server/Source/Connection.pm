@@ -108,7 +108,7 @@ sub record {
     if ($self->start_rtp_server) {
         $self->push_ok;
         $mount->mounted(1);
-        $self->server->mounts_callback->();
+        $self->server->add_source_update_callback->();
     } else {
         $self->not_found;
     }
