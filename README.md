@@ -17,16 +17,8 @@ To install this module type the following:
 ```
 To install debian jessie dependences:
 ```
-Install enyevent
-   sudo apt-get install libanyevent-perl
+   sudo apt-get install libmoose-perl liburi-perl libmoosex-getopt-perl libsocket6-perl libanyevent-perl
    sudo cpan AnyEvent::MPRPC::Client
-   
-Install moose
-   sudo apt-get instal libmoose-perl
-   sudo apt-get install libmoosex-getopt-perl
-   
-Install socket6
-   sudo apt-get install libsocket6-perl
 
 Clone from git
    git clone https://github.com/revmischa/rtsp-server
