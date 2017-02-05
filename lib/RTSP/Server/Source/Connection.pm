@@ -153,7 +153,10 @@ sub announce {
 
 sub setup {
     my ($self) = @_;
-
+    my @chanStr;
+    my $chanPos;
+    my @chan;
+    my $interleaved;
     my $mount_path = $self->get_mount_path
         or return $self->not_found;
 
@@ -171,19 +174,36 @@ sub setup {
     my $transport = $self->get_req_header('Transport')
         or return $self->bad_request;
 
+    $interleaved = 0;
+    $chanPos = index($transport, "interleaved=");
+    if($chanPos != -1){
+        $chanPos += length("interleaved=");
+        $chanStr[0] = substr($transport, $chanPos);
+
+        $chanPos = index($chanStr[0], "-");
+        if($chanPos != -1){
+            $chanPos += 1;
+            $chanStr[1] = substr($chanStr[0], $chanPos);
+            $chan[0] = substr($chanStr[0], 0, 1) + 0;
+            $chan[1] = substr($chanStr[1], 0, 1) + 0;
+            $interleaved = 1;
+        }
+    }
     $stream_id ||= 0;
 
     # create stream
     my $stream = $mount->get_stream($stream_id);
     unless ($stream) {
         $self->debug("Creating new stream $stream_id");
-
         $stream = RTSP::Server::Mount::Stream->new(
             rtp_start_port => $self->next_rtp_start_port,
             index => $stream_id,
         );
+        if($interleaved){
+            $stream->rtp_start_channel($chan[0]);
+            $stream->rtp_end_channel($chan[1]);
+        }
     }
-
     # add stream to mount
     $mount->add_stream($stream);
 

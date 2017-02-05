@@ -26,6 +26,18 @@ has 'rtp_end_port' => (
     builder => 'build_rtp_end_port',
 );
 
+has 'rtp_start_channel' => (
+    is => 'rw',
+    isa => 'Int',
+    default => 0,
+);
+
+has 'rtp_end_channel' => (
+    is => 'rw',
+    isa => 'Int',
+    default => 1,
+);
+
 # map of session_id -> client connection
 has '_clients' => (
     is => 'rw',
