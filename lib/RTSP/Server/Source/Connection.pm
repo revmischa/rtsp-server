@@ -162,7 +162,7 @@ sub announce {
 
 sub setup {
     my ($self) = @_;
-    my @chanStr;
+    my @chan_str;
     my @chan;
     my $interleaved;
     my $server_port;
@@ -184,17 +184,17 @@ sub setup {
         or return $self->bad_request;
 
     $interleaved = 0;
-    @chanStr =
+    @chan_str =
         $transport =~ m/interleaved=(\d+)(?:\-(\d+))/smi;
     if(index($transport, "interleaved=") != -1){
-        unless(length($chanStr[0])){
+        unless(length($chan_str[0])){
             return $self->bad_request;
         }
-        unless(length($chanStr[1])){
+        unless(length($chan_str[1])){
             return $self->bad_request;
         }
-        $chan[0] = $chanStr[0] + 0;
-        $chan[1] = $chanStr[1] + 0;
+        $chan[0] = $chan_str[0] + 0;
+        $chan[1] = $chan_str[1] + 0;
         $interleaved = 1;
     }
     $stream_id ||= 0;
@@ -248,11 +248,18 @@ sub setup {
             return $self->bad_request;
         }
         $self->channel_sockets->{$chan[1] . ""} = $sock_rtcp;
-        $DB::single=1;
-        print "interleaved mode setup\n";
     }
 
     $self->push_ok;
+}
+
+sub write_interleaved_rtp
+{
+    my ($self, $chan, $data) = @_;
+    my $sock;
+    $sock = $self->channel_sockets->{$chan . ""};
+
+    return send $sock, $data, 0;
 }
 
 __PACKAGE__->meta->make_immutable;

@@ -125,6 +125,10 @@ sub listen {
 			$len	+= 4;
 			$handle->push_read(
 				chunk => $len, sub{
+                                        my (undef, $data) = @_;
+                                        my $chan;
+                                        $chan = unpack("C", substr($data, 1, 1));
+                                        $conn->write_interleaved_rtp($chan, substr($data, 4));
 					return;
 				}
 			);
