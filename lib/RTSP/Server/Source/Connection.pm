@@ -98,6 +98,13 @@ sub end_rtp_server {
     }
 
     $self->rtp_listeners([]);
+
+    my @sockets = values %{$self->channel_sockets};
+    foreach my $sock (@sockets){
+        shutdown $sock, 1;
+        close $sock;
+    }
+    $self->channel_sockets({});
 }
 
 sub record {
