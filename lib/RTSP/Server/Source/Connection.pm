@@ -10,11 +10,20 @@ use namespace::autoclean;
 use RTSP::Server::RTPListener;
 use RTSP::Server::Mount::Stream;
 
+use Socket;
+use Socket6;
+
 has 'rtp_listeners' => (
     is => 'rw',
     isa => 'ArrayRef[RTSP::Server::RTPListener]',
     default => sub { [] },
     lazy => 1,
+);
+
+has 'channel_sockets' => (
+    is => 'rw',
+    isa => 'HashRef',
+    default => sub { {} },
 );
 
 around 'public_options' => sub {
@@ -154,9 +163,9 @@ sub announce {
 sub setup {
     my ($self) = @_;
     my @chanStr;
-    my $chanPos;
     my @chan;
     my $interleaved;
+    my $server_port;
     my $mount_path = $self->get_mount_path
         or return $self->not_found;
 
@@ -175,19 +184,18 @@ sub setup {
         or return $self->bad_request;
 
     $interleaved = 0;
-    $chanPos = index($transport, "interleaved=");
-    if($chanPos != -1){
-        $chanPos += length("interleaved=");
-        $chanStr[0] = substr($transport, $chanPos);
-
-        $chanPos = index($chanStr[0], "-");
-        if($chanPos != -1){
-            $chanPos += 1;
-            $chanStr[1] = substr($chanStr[0], $chanPos);
-            $chan[0] = substr($chanStr[0], 0, 1) + 0;
-            $chan[1] = substr($chanStr[1], 0, 1) + 0;
-            $interleaved = 1;
+    @chanStr =
+        $transport =~ m/interleaved=(\d+)(?:\-(\d+))/smi;
+    if(index($transport, "interleaved=") != -1){
+        unless(length($chanStr[0])){
+            return $self->bad_request;
         }
+        unless(length($chanStr[1])){
+            return $self->bad_request;
+        }
+        $chan[0] = $chanStr[0] + 0;
+        $chan[1] = $chanStr[1] + 0;
+        $interleaved = 1;
     }
     $stream_id ||= 0;
 
@@ -199,17 +207,50 @@ sub setup {
             rtp_start_port => $self->next_rtp_start_port,
             index => $stream_id,
         );
-        if($interleaved){
-            $stream->rtp_start_channel($chan[0]);
-            $stream->rtp_end_channel($chan[1]);
-        }
     }
     # add stream to mount
     $mount->add_stream($stream);
 
     # add our RTP ports to transport header response
     my $port_range = $stream->rtp_port_range;
-    $self->add_resp_header("Transport", "$transport;server_port=$port_range");
+    if($interleaved){
+        $self->add_resp_header("Transport", "$transport");
+    }else{
+        $self->add_resp_header("Transport", "$transport;server_port=$port_range");
+    }
+
+    if($interleaved){
+        my($name, $alias, $udp_proto) = AnyEvent::Socket::getprotobyname('udp');
+
+        # create UDP socket for internal packet stream
+        socket my($sock), $self->addr_family, SOCK_DGRAM, $udp_proto;
+        AnyEvent::Util::fh_nonblocking $sock, 1;
+        my $dest;
+        if($self->addr_family == AF_INET){
+            $dest = sockaddr_in($stream->rtp_start_port, Socket::inet_aton("localhost"));
+        }else{
+            $dest = sockaddr_in6($stream->rtp_start_port, Socket6::inet_pton(AF_INET6, "localhost"));
+        }
+        unless (connect $sock, $dest){
+            return $self->bad_request;
+        }
+        $self->channel_sockets->{$chan[0] . ""} = $sock;
+
+        # create UDP socket for internal RTCP packet stream
+        socket my($sock_rtcp), $self->addr_family, SOCK_DGRAM, $udp_proto;
+        AnyEvent::Util::fh_nonblocking $sock_rtcp, 1;
+        if($self->addr_family == AF_INET){
+            $dest = sockaddr_in($stream->build_rtp_end_port, Socket::inet_aton("localhost"));
+        }else{
+            $dest = sockaddr_in6($stream->build_rtp_end_port, Socket6::inet_pton("localhost"));
+        }
+        unless(connect $sock, $dest){
+            return $self->bad_request;
+        }
+        $self->channel_sockets->{$chan[1] . ""} = $sock_rtcp;
+        $DB::single=1;
+        print "interleaved mode setup\n";
+    }
 
     $self->push_ok;
 }
