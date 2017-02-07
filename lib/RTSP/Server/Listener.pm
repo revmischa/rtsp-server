@@ -119,10 +119,10 @@ sub listen {
             on_read => sub {
 		my	$len;
 		my	$magic;
-		$magic		= unpack("C", $handle->{rbuf});
+		$magic = unpack("C", $handle->{rbuf});
 		if($magic == 0x24){
-			$len	= unpack("n", substr($handle->{rbuf}, 2, 4));
-			$len	+= 4;
+			$len = unpack("n", substr($handle->{rbuf}, 2, 4));
+			$len += 4;
 			$handle->push_read(
 				chunk => $len, sub{
                                         my (undef, $data) = @_;

@@ -264,6 +264,9 @@ sub write_interleaved_rtp
 {
     my ($self, $chan, $data) = @_;
     my $sock;
+    unless(exists($self->channel_sockets->{$chan . ""})){
+        return 0;
+    }
     $sock = $self->channel_sockets->{$chan . ""};
 
     return send $sock, $data, 0;
