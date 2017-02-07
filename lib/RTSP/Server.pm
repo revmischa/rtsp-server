@@ -97,6 +97,26 @@ has 'mounts' => (
     traits => [ 'NoGetopt' ],
 );
 
+has 'add_source_update_callback' => (
+    is => 'rw',
+    default => sub {
+        sub{
+            print "default add mounts callback\n";
+        }
+    },
+    traits => [ 'NoGetopt' ],
+);
+
+has 'remove_source_update_callback' => (
+	is => 'rw',
+	default => sub {
+		sub{
+			print "default remove mounts callback\n";
+		}
+	},
+	traits => [ 'NoGetopt'],
+);
+
 sub client_count {
     my ($self) = @_;
 

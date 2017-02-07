@@ -117,6 +117,23 @@ sub listen {
                 $cleanup->();
             },
             on_read => sub {
+		my	$len;
+		my	$magic;
+		$magic = unpack("C", $handle->{rbuf});
+		if($magic == 0x24){
+			$len = unpack("n", substr($handle->{rbuf}, 2, 4));
+			$len += 4;
+			$handle->push_read(
+				chunk => $len, sub{
+                                        my (undef, $data) = @_;
+                                        my $chan;
+                                        $chan = unpack("C", substr($data, 1, 1));
+                                        $conn->write_interleaved_rtp($chan, substr($data, 4));
+					return;
+				}
+			);
+			return;
+		}
                 $handle->push_read(
                     line => sub {
                         my (undef, $line, $eol) = @_;
