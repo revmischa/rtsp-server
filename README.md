@@ -83,10 +83,6 @@ player. Just point it at rtsp://12.34.56.78/abc
 If you don't want to run it as root, you may specify non-priviliged
 ports with `--clientport/-c` and `--sourceport/-s`
 
-## TODO:
-
-Priv dropping, authentication, client encoder, stats, tests
-
 ## DEPENDENCIES
 
 This module requires these other modules and libraries:
@@ -95,8 +91,8 @@ This module requires these other modules and libraries:
 
 ## COPYRIGHT AND LICENCE
 
-Copyright (C) 2014 by Mischa Spiegelmock
+ABRMS
 
-This library is free software; you can redistribute it and/or modify
-it under the same terms as Perl itself, either Perl version 5.10.0 or,
-at your option, any later version of Perl 5 you may have available.
+## Maintainership
+
+Want to take over maintaining this project? Feel free. 
